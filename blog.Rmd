@@ -14,4 +14,29 @@ load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
+
+library(tidyverse)
 ```
+
+```{r}
+
+contributionsByCandidate <- contributions %>%
+  rename(fec_id = cand_id) %>%
+  group_by(fec_id) %>%
+  summarise(totalContributions = sum(transaction_amt))
+
+house_elections_wContributions <- house_elections %>%
+  left_join(contributionsByCandidate, by = "fec_id") %>%
+  mutate( totalContributions = ifelse(is.na(totalContributions), 0, totalContributions), party = factor(ifelse(party == "R" | party == "D", party, "O")), incumbent = factor(incumbent), ge_winner = factor(ge_winner)) %>%
+  filter( ge_winner != "")
+
+ggplot(house_elections_wContributions, aes(x = totalContributions, y = general_votes, color= ge_winner, fill = party, shape = incumbent)) +
+  geom_point(stroke = .5)+
+  scale_shape_manual(values=c(21, 23)) +
+  scale_color_manual(values=c("#000000", "#00ff00"))+
+  scale_fill_manual(values=c("#0000ff", "#aa00aa", "#ff0000"))+
+  facet_wrap(~incumbent)
+  
+
+```
+
