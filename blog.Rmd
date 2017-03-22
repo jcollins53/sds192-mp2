@@ -79,3 +79,29 @@ ggplot(house_elections_wContributions, aes(x = netCon, y = general_votes, col=ge
   facet_wrap(~incumbent)
 ```
 
+```{r}
+votesPerRegion <- house_elections %>%
+  group_by(state, district) %>%
+  summarise(totalVotes = sum(general_votes))
+
+netContributionsByCandidate <- contributions %>%
+  filter( transaction_type == "24E" | transaction_type == "24A") %>%
+  mutate(transaction_type = ifelse(transaction_type == "24A", "against", "pro"))%>%
+  rename(fec_id = cand_id) %>%
+  group_by(fec_id, transaction_type) %>%
+  summarise(sumContributions = sum(transaction_amt)) %>%
+  spread(transaction_type, sumContributions, fill = 0) %>%
+  mutate(netContribution = pro - against)
+  
+contributionsByRegion <- house_elections %>%
+  left_join(votesPerRegion, by = c("state", "district"))%>%
+  left_join(netContributionsByCandidate, by="fec_id") %>%
+  mutate(percentVotes = general_votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner)) %>%
+  filter( ge_winner != "" & general_votes!= 0)
+
+ggplot(contributionsByRegion, aes(x = netContribution, y = percentVotes, col=ge_winner, fill = ge_winner)) +
+  geom_point( alpha =.5, na.rm = TRUE) +
+  scale_color_manual(values=c("#000000", "#00aa00"))+
+  facet_wrap(~incumbent)
+```
+
