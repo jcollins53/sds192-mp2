@@ -93,15 +93,32 @@ netContributionsByCandidate <- contributions %>%
   spread(transaction_type, sumContributions, fill = 0) %>%
   mutate(netContribution = pro - against)
   
-contributionsByRegion <- house_elections %>%
+contributionsByRegionByCandidate <- house_elections %>%
   left_join(votesPerRegion, by = c("state", "district"))%>%
   left_join(netContributionsByCandidate, by="fec_id") %>%
-  mutate(percentVotes = general_votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner)) %>%
+  mutate(percentVotes = general_votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner), netContribution = ifelse(!is.na(netContribution), netContribution, 0)) %>%
   filter( ge_winner != "" & general_votes!= 0)
 
-ggplot(contributionsByRegion, aes(x = netContribution, y = percentVotes, col=ge_winner, fill = ge_winner)) +
+ggplot(contributionsByRegionByCandidate, aes(x = netContribution, y = percentVotes, col=ge_winner, fill = ge_winner)) +
   geom_point( alpha =.5, na.rm = TRUE) +
   scale_color_manual(values=c("#000000", "#00aa00"))+
   facet_wrap(~incumbent)
+
+
+
+```
+```{r}
+meanContribution <- function(filterExp = TRUE) {
+  contributionsByRegionByCandidate %>%
+    filter(eval(parse(text = filterExp), envir = contributionsByRegionByCandidate)) %>%
+    summarise(meanCont = mean(netContribution))
+  
+}
+
+meanContribution("incumbent == TRUE")
+meanContribution("incumbent == FALSE")
+meanContribution("ge_winner == 'W'")
+meanContribution("ge_winner == 'N'")
+
 ```
 
