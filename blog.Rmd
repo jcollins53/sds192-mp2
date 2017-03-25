@@ -16,6 +16,7 @@ load("committees.rda")
 load("contributions.rda")
 
 library(tidyverse)
+options(scipen = 999)
 ```
 
 
@@ -40,8 +41,8 @@ contributionsByRegionByCandidate <- house_elections %>%
   left_join(netContributionsByCandidate, by="fec_id") %>%
   mutate(percentVotes = votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner), netContribution = ifelse(!is.na(netContribution), netContribution, 0))
 
-electionPlot <- ggplot(contributionsByRegionByCandidate, aes(x = netContribution, y = percentVotes, col=incumbent, fill = incumbent)) +
-  facet_wrap(~electionType)
+electionPlot <- ggplot(contributionsByRegionByCandidate, aes(x = netContribution, y = percentVotes, col=incumbent, fill = incumbent) + 
+  facet_wrap(~electionType)  
 
 electionPlot + geom_point( alpha =.5, na.rm = TRUE) 
 
@@ -73,4 +74,6 @@ meanContribution("ge_winner == 'W'")
 ```{r}
 meanContribution("ge_winner == 'N'")
 ```
+
+
 
