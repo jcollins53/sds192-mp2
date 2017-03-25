@@ -18,66 +18,6 @@ load("contributions.rda")
 library(tidyverse)
 ```
 
-```{r}
-
-contributionsByCandidate <- contributions %>%
-  filter( transaction_type == "24E") %>%
-  rename(fec_id = cand_id) %>%
-  group_by(fec_id) %>%
-  summarise(totalContributions = sum(transaction_amt))
-
-house_elections_wContributions <- house_elections %>%
-  left_join(contributionsByCandidate, by = "fec_id") %>%
-  mutate(incumbent = factor(incumbent), ge_winner = factor(ge_winner)) %>%
-  filter( ge_winner != "" & !is.na(totalContributions))
-
-ggplot(house_elections_wContributions, aes(x = totalContributions, y = general_votes)) +
-  geom_smooth( alpha =.5) +
-  scale_color_manual(values=c("#000000", "#00aa00"))+
-  facet_wrap(~incumbent)
-  
-
-```
-
-```{r}
-
-```
-median winner
-
-median loser
-
-median incumbent
-
-median not incumbent
-
-```{r}
-contributionByType <- function(type = "24E"){
-  contributionsByCandidateAndType <- contributions %>%
-  filter( transaction_type == type) %>%
-  rename(fec_id = cand_id) %>%
-  group_by(fec_id) %>%
-  summarise(totalContributions = sum(transaction_amt))
-  
-  contributionsByCandidateAndType
-}
-
-conFor <- contributionByType("24E")
-conAgainst <- contributionByType("24A")
-
-conDiff <- conFor %>%
-  left_join(conAgainst, by="fec_id") %>%
-  mutate( totalContributions.y = ifelse(is.na( totalContributions.y), 0,  totalContributions.y), netCon = totalContributions.x- totalContributions.y)
-
-house_elections_wContributions <- house_elections %>%
-  left_join(conDiff, by = "fec_id") %>%
-  mutate(incumbent = factor(incumbent), ge_winner = factor(ge_winner)) %>%
-  filter( ge_winner != "" & general_votes!= 0)
-
-ggplot(house_elections_wContributions, aes(x = netCon, y = general_votes, col=ge_winner, fill = ge_winner)) +
-  geom_smooth( alpha =.5, na.rm = TRUE) +
-  scale_color_manual(values=c("#000000", "#00aa00"))+
-  facet_wrap(~incumbent)
-```
 
 ```{r}
 votesPerRegion <- house_elections %>%
