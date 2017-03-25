@@ -82,7 +82,8 @@ ggplot(house_elections_wContributions, aes(x = netCon, y = general_votes, col=ge
 ```{r}
 votesPerRegion <- house_elections %>%
   group_by(state, district) %>%
-  summarise(totalVotes = sum(general_votes))
+  summarise(general_votes = sum(general_votes) , primary_votes = sum(primary_votes) ) %>%
+  gather(key = electionType, value = totalVotes, general_votes, primary_votes)
 
 netContributionsByCandidate <- contributions %>%
   filter( transaction_type == "24E" | transaction_type == "24A") %>%
@@ -94,19 +95,21 @@ netContributionsByCandidate <- contributions %>%
   mutate(netContribution = pro - against)
   
 contributionsByRegionByCandidate <- house_elections %>%
-  left_join(votesPerRegion, by = c("state", "district"))%>%
+  gather(key = electionType, value = votes, general_votes, primary_votes)%>%
+  left_join(votesPerRegion, by = c("state", "district", "electionType"))%>%
   left_join(netContributionsByCandidate, by="fec_id") %>%
-  mutate(percentVotes = general_votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner), netContribution = ifelse(!is.na(netContribution), netContribution, 0)) %>%
-  filter( ge_winner != "" & general_votes!= 0)
+  mutate(percentVotes = votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner), netContribution = ifelse(!is.na(netContribution), netContribution, 0))
 
-ggplot(contributionsByRegionByCandidate, aes(x = netContribution, y = percentVotes, col=ge_winner, fill = ge_winner)) +
-  geom_point( alpha =.5, na.rm = TRUE) +
-  scale_color_manual(values=c("#000000", "#00aa00"))+
-  facet_wrap(~incumbent)
+electionPlot <- ggplot(contributionsByRegionByCandidate, aes(x = netContribution, y = percentVotes, col=incumbent, fill = incumbent)) +
+  facet_wrap(~electionType)
 
+electionPlot + geom_point( alpha =.5, na.rm = TRUE) 
 
+electionPlot + geom_smooth( alpha =.5, na.rm = TRUE) 
 
 ```
+
+
 ```{r}
 meanContribution <- function(filterExp = TRUE) {
   contributionsByRegionByCandidate %>%
@@ -116,9 +119,18 @@ meanContribution <- function(filterExp = TRUE) {
 }
 
 meanContribution("incumbent == TRUE")
-meanContribution("incumbent == FALSE")
-meanContribution("ge_winner == 'W'")
-meanContribution("ge_winner == 'N'")
 
+```
+
+```{r}
+meanContribution("incumbent == FALSE")
+```
+
+```{r}
+meanContribution("ge_winner == 'W'")
+```
+
+```{r}
+meanContribution("ge_winner == 'N'")
 ```
 
