@@ -20,22 +20,26 @@ library(tidyverse)
 
 
 ```{r}
+
+# Creates long data table with all the districts and their total number of general and primary votes.
 votesPerRegion <- house_elections %>%
   group_by(state, district) %>%
   summarise(general_votes = sum(general_votes) , primary_votes = sum(primary_votes) ) %>%
   gather(key = electionType, value = totalVotes, general_votes, primary_votes)
 
+# Creates data table of candidate ids and the total amounts for (24E), against (24A), and net (24E-24A)
 netContributionsByCandidate <- contributions %>%
   filter( transaction_type == "24E" | transaction_type == "24A") %>%
-  mutate(transaction_type = ifelse(transaction_type == "24A", "against", "pro"))%>%
-  rename(fec_id = cand_id) %>%
-  group_by(fec_id, transaction_type) %>%
-  summarise(sumContributions = sum(transaction_amt)) %>%
-  spread(transaction_type, sumContributions, fill = 0) %>%
+  mutate(transaction_type = ifelse(transaction_type == "24A", "against", "pro"))%>% #24_ not valid col name
+  rename(fec_id = cand_id) %>% #Switch cand -> fec for join with house_elections
+  group_by(fec_id, transaction_type) %>% 
+  summarise(sumContributions = sum(transaction_amt)) %>% 
+  spread(transaction_type, sumContributions, fill = 0) %>% #makes data wide so we can calculate net, 1 row per candidate. 
   mutate(netContribution = pro - against)
   
+#Creates data table of candidates, their net contributions, and their amount of votes.
 contributionsByRegionByCandidate <- house_elections %>%
-  gather(key = electionType, value = votes, general_votes, primary_votes)%>%
+  gather(key = electionType, value = votes, general_votes, primary_votes)%>%  #Make long for join with votesPerRegion
   left_join(votesPerRegion, by = c("state", "district", "electionType"))%>%
   left_join(netContributionsByCandidate, by="fec_id") %>%
   mutate(percentVotes = votes/totalVotes, incumbent = factor(incumbent), ge_winner = factor(ge_winner), netContribution = ifelse(!is.na(netContribution), netContribution, 0))
@@ -45,17 +49,19 @@ electionPlot <- ggplot(contributionsByRegionByCandidate, aes(x = netContribution
 
 electionPlot + geom_point( alpha =.5, na.rm = TRUE) 
 
+```
+```{r message = FALSE}
 electionPlot + geom_smooth( alpha =.5, na.rm = TRUE) 
-
 ```
 
 
 ```{r}
+
+#Function takes filter expression as a string, returns mean netContribution for all candidates who fit that filter.
 meanContribution <- function(filterExp = TRUE) {
   contributionsByRegionByCandidate %>%
-    filter(eval(parse(text = filterExp), envir = contributionsByRegionByCandidate)) %>%
+    filter(eval(parse(text = filterExp), envir = contributionsByRegionByCandidate)) %>% #turns string into expression
     summarise(meanCont = mean(netContribution))
-  
 }
 
 meanContribution("incumbent == TRUE")
