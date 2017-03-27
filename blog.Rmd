@@ -1,15 +1,22 @@
 ---
 title: "Mini-Project 2"
-author: "Your Name Here"
-date: "March 24, 2017"
+author: "Morgan McLain-Smith and Julia Collins"
+date: "March 26 2017"
 output: html_document
 ---
 
 
-## Loading the data
+# PAC Spending and Election Outcomes in the Post-Citizens United Era
+
+
+# In 2009 the case, Citizens United v. Federal Election Commission the U.S. Supreme Court.  ruled a 5-4 decision authored by chief Justice John Roberts that regulations limiting the ability of corporations and organizations to spend money to promote political agendas constituted an infringement of the first amendment. The decision had the effect of striking down major sections of existing campaign finance law and resulted in the deregulation campaign spending by outside organizations. This decision contributed to the explosion of outside spending by Political Action Committees (PACs) hoping to influence public policy through electioneering.  Some question still remains, however, about the actual impact of outside spending on election results. In our analysis we looked at the relationship between outside spending by PACs and vote-share captured by candidates in house elections in 2011-2012, the first election cycle after Citizens United ruling. Since in the United States incumbents have high rates of reelection we decided to track incumbents and non-incumbents in order to better isolate the relationship between outside spending and electoral success, by examining data for both primary and general election data. 
+
+
 
 
 ```{r, include=FALSE}
+## Loading the data
+
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
@@ -81,6 +88,11 @@ meanContribution("ge_winner == 'W'")
 ```{r}
 meanContribution("ge_winner == 'N'")
 ```
+
+# Our analysis found that the net spending (calculated as outside spending in favor of a candidate minus outside spending against a candidate) clustered heavily around 0, indicating that in the majority of house elections there was either little outside spending, or that contributions to pacs supporting a particular candidate and against that candidate were roughly balanced. Although the majority of races had net contributions near zero, the average net contribution was negative with a mean contribution of  -$247,633 for incumbents, and mean net contribution of -$54,188 for non incumbents. 
+
+#In both primaries and general elections incumbents consistently captured a higher percentage of the vote than non-incumbents at every level of contributions. In general elections when separating out incumbency status there there appears to be no relationship between net contribution and election outcomes when net contributions are below 0 (indicating higher levels of spending against a candidate than for that candidate), and a slight positive relationship between levels of positive net contributions and electoral outcomes. In primary elections there appears to be more variation in vote-share capture for both incumbents and non-incumbents at all levels of spending, and a slightly positive relationship between net contributions and vote share for both non-incumbents, and surprisingly a slight negative relationship between net contributions and vote share for incumbents, although these results may not be statistically significant. This weak to nonexistent relationship between net contributions and vote share across election types and incumbency status indicates that effect of net contributions by Political Action Committees is not a reliable indicator of election results. 
+ 
 
 
 
